@@ -22,15 +22,11 @@ export default async (Sequelize, sequelize) => {
       allowNull: false,
       unique: true
     },
-    password: {
-      type: Sequelize.DataTypes.STRING(64),
-      allowNull: false
-    },
     role: {
       type: Sequelize.DataTypes.ENUM,
-      values: ['superadmin', 'admin', 'teacher', 'students',' moderator'],
+      values: ['superadmin', 'admin', 'teacher', 'student',' moderator'],
       allowNull: false,
-      defaultValue: 'student'
+      defaultValue: "student"
     },
     bdate: {
       type: Sequelize.DataTypes.DATE,
