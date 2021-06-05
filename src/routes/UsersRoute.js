@@ -7,7 +7,9 @@ router.post('/checkphone', UserController.checkPhone)
 
 router.post('/signup', UserController.signup)
 
-// router.post('/login', UserController.login)
+router.post('/login', UserController.login)
+
+router.post('/validatecode', UserController.validateCode)
 
 
 export default{
