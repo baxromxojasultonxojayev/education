@@ -134,13 +134,24 @@ const {Op} = pkg
         }
       })
 
+      
       if(!attempt) throw new Error('Code is not found')
-
+      
       const { code } = await codeValidation.validateAsync(req.body)
-
+      
       console.log(attempt.dataValues.attempts);
-
+      
       if(Number(code) !== Number(attempt.dataValues.code)){
+        const settings = await req.postgres.setting.findAll()
+
+        const codeAttemptSize = settings.find(x => x.dataValues.name = 'code_attempts')
+        const phoneAttemptSize = settings.find(x => x.dataValues.name = 'phone_attempts')
+        const banTimeSize = settings.find(x => x.dataValues.name = 'ban_time')
+
+        console.log(codeAttemptSize.dataValues.value)
+        console.log(phoneAttemptSize.dataValues.value)
+        console.log(banTimeSize.dataValues.value)
+
         await req.postgres.attempts.update({
           attempts: attempt.dataValues.attempts + 1
         },{
@@ -148,7 +159,7 @@ const {Op} = pkg
             id: validationId
           }
         }) 
-        if(Number(attempt.dataValues.attempts) >= 2){
+        if(Number(attempt.dataValues.attempts) >= Number(codeAttemptSize.dataValues.value)){
           await req.postgres.attempts.destroy({
             where: {
               id: validationId
@@ -164,7 +175,7 @@ const {Op} = pkg
             }
           })
 
-          if(Number(attempt.dataValues.user.dataValues.user_attempts) >= 2){
+          if(Number(attempt.dataValues.user.dataValues.user_attempts) >= Number(phoneAttemptSize.dataValues.value)){
             await req.postgres.users.update({
               user_attempts: 0
             }, {
@@ -175,7 +186,7 @@ const {Op} = pkg
 
             await req.postgres.bans.create({
               user_id: attempt.dataValues.user_id,
-              expiredDate: new Date(Date.now() + 7200000)
+              expiredDate: new Date(Date.now() + Number(banTimeSize.dataValues.value))
             })
           }
         }

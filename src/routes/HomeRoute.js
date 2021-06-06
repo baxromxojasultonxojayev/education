@@ -1,9 +1,12 @@
 import express from 'express'
+import AuthMiddleware from '../middleware/AuthMiddleware.js'
 
 const router = express.Router()
 
-router.get('/', (req, res)=>{
-    res.send('salom')
+// router.use(AuthMiddleware)
+
+router.get('/', AuthMiddleware, (req, res)=>{
+  res.send('salom ')
 })
 
 export default {
