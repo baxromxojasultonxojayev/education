@@ -4,6 +4,7 @@ import randomNumber from "random-number"
 import codeValidation from "../validation/codeValidation.js";
 import pkg from "sequelize";
 import moment from "moment";
+import JWT from '../modules/jwt.js  '
 
 const {Op} = pkg
 
@@ -180,9 +181,54 @@ const {Op} = pkg
         }
         throw new Error('Incorrect validation code')
       }
+
+      await req.postgres.sessions.destroy({
+        where: {
+          user_id: attempt.dataValues.user_id
+        }
+      })
+
+      const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress
+      const userAgent = req.headers['user-agent']
+
+      if(!(ipAddress && userAgent)){
+        throw new Error('Unable device')
+      }
+
+      const session = await req.postgres.sessions.create({
+        user_id: attempt.dataValues.user_id,  
+        ip_address: ipAddress,
+        user_agent: userAgent 
+      })
+
+      const token = JWT.generateJWT({
+        id: session.dataValues.id,
+
+      })
+
+      await req.postgres.attempts.destroy({
+        where: {
+          user_id: attempt.dataValues.user_id
+        }
+      })
+
+      await req.postgres.attempts.update({
+        user_attempts: 0
+      },{
+        where: {
+          user_id: attempt.dataValues.user_id
+        }
+      })
+      res.status(200).json({
+        ok: true,
+        message: "You have logged",
+        token: token
+      })
+
+
     }
     catch(e){
-      console.log(e);
+      // console.log(e);
       res.status(401).json({
         ok: false,
         message: e + ''
