@@ -7,6 +7,7 @@ import SessionModel from '../models/SessionModel.js'
 import SettingModel from '../models/SettingModel.js'
 import FileModel from '../models/FileModel.js'
 import UserPhotoModel from '../models/UserPhotoModel.js'
+import TeachersModel from '../models/TeachersModel.js'
 const sequelize = new Sequelize(config.PG_CONNECTION_STRING, {
   logging: false
 })
@@ -22,6 +23,7 @@ async function postgres () {
     db.setting = await SettingModel(Sequelize, sequelize)
     db.file_model = await FileModel(Sequelize, sequelize)
     db.user_photo = await UserPhotoModel(Sequelize, sequelize)
+    db.teacher_model = await TeachersModel(Sequelize, sequelize) 
     
     await db.users.hasMany(db.attempts, {
       foreignKey: {
@@ -105,6 +107,19 @@ async function postgres () {
         allowNull: false
       }
     })
+
+    await db.teacher_model.hasOne(db.users,{
+      foreignKey:{
+        name: 'user_id',
+        allowNull: false
+      }
+    })
+    await db.users.belongsTo(db.teacher_model, {
+      foreignKey: {
+        name: 'user_id',
+        allowNull: false
+      }
+    })
     
     await sequelize.sync({force: false})
     // await db.bans.destroy({
@@ -113,13 +128,20 @@ async function postgres () {
     //   } 
     // })
 
-    // let x = await db.setting.create({
-    //   name: 'phone_attempts',
-    //   value: 3
-    // })
+    // let x = await db.users.update(
+    //   {
+    //     role: 'admin'
+    //   },
+    //   {
+    //     where: {
+    //       user_id: 'e74d652b-079f-4e27-89ea-da0f018c5546'
+    //     }
+    //   }
+      
+    // )
     // console.log(x);
     
-    // const settings = await db.setting.findAll()
+    // const settings = await db.users.findAll()
     // console.log(settings);
     
     return db

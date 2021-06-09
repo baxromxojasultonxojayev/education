@@ -1,6 +1,7 @@
 import express from 'express'
 
 import UserController from '../controller/UserController.js'
+import AdminMiddleware from '../middleware/AdminMiddleware.js'
 import AuthMiddleware from '../middleware/AuthMiddleware.js'
 
 const router = express.Router()
@@ -16,8 +17,10 @@ router.post('/edit', AuthMiddleware, UserController.editPersonalData)
 
 router.post('/editPhoto', AuthMiddleware, UserController.editPhoto)
 
-router.get('/', AuthMiddleware, UserController.getData)
 
+router.post('/promoteUser',[AuthMiddleware,AdminMiddleware], UserController.promoteUser)
+
+router.get('/', AuthMiddleware, UserController.getData)
 
 
 

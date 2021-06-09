@@ -1,6 +1,6 @@
 import express from 'express'
 import http from 'http'
-import fs from 'fs'
+import fs from 'fs/promises'
 import path from 'path'
 import cors from 'cors'
 import helmet from 'helmet'
@@ -14,7 +14,10 @@ import swaggerDocs from './swagger.js';
 
 async function main(){
   let __driname = path.resolve(path.dirname(''))
-  
+  let setting = await fs.readFile(path.join(__driname, "setting.json"), 'utf-8')
+
+  setting = JSON.parse(setting)
+  console.log(setting);
   let db = await postgres() 
   // console.log(db);
 
@@ -32,6 +35,7 @@ async function main(){
 
   app.use(async (req, res, next) => {
     req.postgres = db
+    req.setting = setting
     next()
   })
   app.use("/api-docs",swaggerUi.serve, swaggerUi.setup(swaggerDocs))

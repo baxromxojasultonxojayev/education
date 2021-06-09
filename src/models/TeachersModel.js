@@ -5,12 +5,21 @@ export default async (Sequelize, sequelize) => {
       primaryKey: true,
       defaultValue: Sequelize.UUIDV4,
     },
-    
-    ip_address: {
-      type: Sequelize.DataTypes.INET,
-      allowNull: false
+    skills: {
+      type: Sequelize.DataTypes.ARRAY(Sequelize.DataTypes.STRING),
+      allowNull: true
     },
-
-    
+    experiences: {
+      type: Sequelize.DataTypes.ARRAY(Sequelize.DataTypes.STRING),
+      allowNull: true
+    },
+    education: {
+      type: Sequelize.DataTypes.ARRAY(Sequelize.DataTypes.STRING),
+      allowNull: true
+    },
+    social: {
+      type: Sequelize.DataTypes.ARRAY(Sequelize.DataTypes.STRING),
+      allowNull: true
+    }
   })
 }
