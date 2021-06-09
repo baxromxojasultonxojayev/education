@@ -2,9 +2,11 @@ import phoneValidation from "../validation/phoneValidation.js"
 import signupValidation from "../validation/signupValidation.js";
 import randomNumber from "random-number"
 import codeValidation from "../validation/codeValidation.js";
+import editValidation from "../validation/editValidation.js";
 import pkg from "sequelize";
 import moment from "moment";
 import JWT from '../modules/jwt.js  '
+import editPhotoValidation from "../validation/editPhotoValidation.js";
 
 const {Op} = pkg
 
@@ -146,11 +148,11 @@ const {Op} = pkg
 
         const codeAttemptSize = settings.find(x => x.dataValues.name = 'code_attempts')
         const phoneAttemptSize = settings.find(x => x.dataValues.name = 'phone_attempts')
-        const banTimeSize = settings.find(x => x.dataValues.name = 'ban_time')
+        const banTimeSize = settings.find(x => x.dataValues.name = 'ban_time')  
 
-        console.log(codeAttemptSize.dataValues.value)
-        console.log(phoneAttemptSize.dataValues.value)
-        console.log(banTimeSize.dataValues.value)
+        // console.log(codeAttemptSize.dataValues.value)
+        // console.log(phoneAttemptSize.dataValues.value)
+        // console.log(banTimeSize.dataValues.value)
 
         await req.postgres.attempts.update({
           attempts: attempt.dataValues.attempts + 1
@@ -201,16 +203,20 @@ const {Op} = pkg
 
       const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress
       const userAgent = req.headers['user-agent']
-
+      
       if(!(ipAddress && userAgent)){
         throw new Error('Unable device')
       }
+      console.log(req.headers['x-forwarded-for'] || req.connection.remoteAddress, req.headers['user-agent']);
+
 
       const session = await req.postgres.sessions.create({
         user_id: attempt.dataValues.user_id,  
         ip_address: ipAddress,
         user_agent: userAgent 
       })
+      if(!session) throw new Error('no session')
+      console.log(session);
 
       const token = JWT.generateJWT({
         id: session.dataValues.id,
@@ -239,8 +245,93 @@ const {Op} = pkg
 
     }
     catch(e){
-      // console.log(e);
+      console.log(e);
       res.status(401).json({
+        ok: false,
+        message: e + ''
+      })
+    }
+  }
+
+  static async editPersonalData(req, res){
+    try{
+      const data = await editValidation.validateAsync(req.body)
+      const info = {
+        ... data,
+        gender: data.gender == 2 ? 'male' : 'female'
+      }
+      await req.postgres.users.update(info, {
+        where: {
+          user_id: req.user
+        }
+      })
+
+      await res.status(202).json({
+        ok: true,
+        message: "Changes has been accepted",
+        data: info
+      })
+    }
+    catch(e){
+      res.status(400).json({
+        ok: false,
+        message: e + ''
+      })
+    }
+  }
+
+  static async getData(req, res){
+    try{
+      const user = await req.postgres.users.findOne({
+        where: {
+          user_id: req.user
+        },
+        include: {
+          model: req.postgres.user_photo,
+          include: {
+            model: req.postgres.file_model
+          }
+
+        }
+      })
+      await res.status(200).json({
+        ok: true,
+        message: user.dataValues,
+        // data: user.datavalues
+      })
+      // console.log(user.dataValues);
+    }
+    catch(e){
+      res.status(500).json({
+        ok: true,
+        message: e + ""
+      })
+    }
+  }
+
+  static async editPhoto(req, res){
+    try{
+      const data = await editPhotoValidation.validateAsync(req.body)
+      
+      await req.postgres.user_photo.destroy({
+        where: {
+          user_id: req.user
+        }
+      })
+      const photo = await req.postgres.user_photo.create({
+        file_id: data.file_id,
+        user_id: req.user,
+
+      })
+      console.log(photo);
+
+      await res.status(202).json({
+        ok: true,
+        message: "Changes has been accepted",
+      })
+    }
+    catch(e){
+      res.status(400).json({
         ok: false,
         message: e + ''
       })

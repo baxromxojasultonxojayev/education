@@ -7,6 +7,8 @@ import helmet from 'helmet'
 import morgan from 'morgan'
 import postgres from './modules/postgres.js'
 import routes from './routes/routes.js'
+import swaggerUi from 'swagger-ui-express'
+import swaggerDocs from './swagger.js';
 
 
 
@@ -32,6 +34,7 @@ async function main(){
     req.postgres = db
     next()
   })
+  app.use("/api-docs",swaggerUi.serve, swaggerUi.setup(swaggerDocs))
 
   routes(app)
 } 

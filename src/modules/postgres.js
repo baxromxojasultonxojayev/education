@@ -5,6 +5,8 @@ import BanModel from '../models/BanModel.js'
 import UserModel from '../models/UserModel.js'
 import SessionModel from '../models/SessionModel.js'
 import SettingModel from '../models/SettingModel.js'
+import FileModel from '../models/FileModel.js'
+import UserPhotoModel from '../models/UserPhotoModel.js'
 const sequelize = new Sequelize(config.PG_CONNECTION_STRING, {
   logging: false
 })
@@ -18,6 +20,8 @@ async function postgres () {
     db.bans = await BanModel(Sequelize, sequelize)
     db.sessions = await SessionModel(Sequelize, sequelize)
     db.setting = await SettingModel(Sequelize, sequelize)
+    db.file_model = await FileModel(Sequelize, sequelize)
+    db.user_photo = await UserPhotoModel(Sequelize, sequelize)
     
     await db.users.hasMany(db.attempts, {
       foreignKey: {
@@ -60,6 +64,48 @@ async function postgres () {
         allowNull: false
       }
     })
+
+    await db.users.hasMany(db.file_model, {
+      foreignKey: {
+        name: 'user_id',
+        allowNull: false
+      }
+    })
+
+    await db.file_model.belongsTo(db.users, {
+      foreignKey: {
+        name: 'user_id',
+        allowNull: false
+      }
+    })
+
+    await db.users.hasMany(db.user_photo, {
+      foreignKey: {
+        name: "user_id",
+        allowNull: false
+      }
+    })    
+    await db.user_photo.belongsTo(db.users, {
+      foreignKey: {
+        name: 'user_id',
+        allowNull: false
+      }
+    })
+
+
+    await db.file_model.hasOne(db.user_photo, {
+      foreignKey: {
+        name: "file_id",
+        allowNull: false
+      }
+    })    
+    await db.user_photo.belongsTo(db.file_model, {
+      foreignKey: {
+        name: 'file_id',
+        allowNull: false
+      }
+    })
+    
     await sequelize.sync({force: false})
     // await db.bans.destroy({
     //   where: {
@@ -68,13 +114,13 @@ async function postgres () {
     // })
 
     // let x = await db.setting.create({
-    //   name: 'ban_time',
-    //   value: 7200000
+    //   name: 'phone_attempts',
+    //   value: 3
     // })
     // console.log(x);
     
     // const settings = await db.setting.findAll()
-    // console.log(banTimeSize);
+    // console.log(settings);
     
     return db
   }
